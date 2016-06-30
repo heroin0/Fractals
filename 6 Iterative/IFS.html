@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="Cache-Control" content="no-cache"/>
+    <title>IFS</title>
+
+
+    <script>
+
+
+        function IFS() {
+            var canvas = document.getElementById("canvas_IFS");
+            var context = canvas.getContext('2d');
+            var canvasData = context.getImageData(0, 0, canvas.width, canvas.height);
+            var canvasWidth = canvas.width;
+            var canvasHeight = canvas.height;
+            var iter = document.getElementById("iteration").value;
+            context.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            updateCanvas(context, canvasData);
+            drawMaster(100, 100, iter, context, canvasData, canvasWidth, canvasHeight);
+
+        }
+
+
+
+        function drawMaster(x0, y0, iteration, context, canvasData, canvasWidth, canvasHeight) {
+            var x1, y1, transformSelect;
+            updateCanvas(context, canvasData);
+            drawPixel(x0 + 100, y0 + 100, canvasData, canvasWidth);
+            for (var i = 0; i < iteration; i++) {
+                transformSelect = randomSelect();
+                x1 = transformPointX(x0, y0, transformSelect);
+                y1 = transformPointY(x0, y0, transformSelect);
+                x0 = x1;
+                y0 = y1;
+                drawPixel(30*x0 + 100, 30*y0 + 100, canvasData, canvasWidth);
+                updateCanvas(context, canvasData);
+            }
+            x0 = x0;
+        }
+
+        //  function iterate(x, y, iteration, canvasData, canvasWidth) {//вот к чему приводит любовь к рекурсии.
+        //    drawPixel(x+100, y+100, canvasData, canvasWidth)
+
+        //  var x1 = transformPointX(x, y, transformSelect);
+        //var y1 = transformPointY(x, y, transformSelect);
+        //if (iteration != 0) {
+        //  iteration--;
+        //iterate(x1, y1, iteration, canvasData, canvasWidth);
+        //}
+        //}
+
+        function randomSelect() {
+            var r = Math.round((Math.random() * 99));
+            if (r <= 84)return 0;
+            if (r <= 91) return 1;
+            if (r <= 98) return 2;
+            return 3;
+        }
+
+        function transformPointX(x, y, num) {
+            if (num == 0) return (0.85 * x + 0.04 * y);
+            if (num == 1) return (0.2 * x - 0.26 * y);
+            if (num == 2) return (-0.15 * x + 0.28 * y);
+            if (num == 3) return (0);
+        }
+
+        function transformPointY(x, y, num) {
+            if (num == 0) return (-0.04 * x + 0.85 * y + 1.6);
+            if (num == 1) return (0.23 * x + 0.22 * y + 1.6);
+            if (num == 2) return (0.26 * x + 0.24 * y + 0.44);
+            if (num == 3) return (0.16 * y);
+        }
+
+        function updateCanvas(context, canvasData) {
+            context.putImageData(canvasData, 0, 0);
+        }
+
+
+        function drawPixel(x, y, canvasData, canvasWidth) {
+            var index = (Math.round(x) + Math.round(y) * canvasWidth) * 4;
+            canvasData.data[index + 0] = 1;
+            canvasData.data[index + 1] = 1;
+            canvasData.data[index + 2] = 255;
+            canvasData.data[index + 3] = 255;
+        }
+
+        function sliderUpdate(value) {
+            document.querySelector('#iterValue').value = value;
+        }
+    </script>
+</head>
+
+<body onload="IFS()">
+<canvas height='500' width='500' id='canvas_IFS' style="border:1px solid #000000" ;></canvas>
+<br>
+Число итераций
+<input type='range' min="1000" max="10000" step="1000" id="iteration" oninput="IFS()" value="2000" list=iterSettings
+       onchange="sliderUpdate(value)">
+<datalist id=iterSettings>
+    <option>1000</option>
+    <option>2000</option>
+    <option>3000</option>
+    <option>4000</option>
+    <option>5000</option>
+    <option>6000</option>
+    <option>7000</option>
+    <option>8000</option>
+    <option>9000</option>
+    <option>10000</option>
+</datalist>
+<output for=iteration id=iterValue>2000</output>
+</body>
+</html>

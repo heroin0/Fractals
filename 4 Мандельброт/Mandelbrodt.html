@@ -1,0 +1,166 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="Cache-Control" content="no-cache"/>
+    <title>Mandelbrodt</title>
+
+
+    <script>
+
+        scale = 1.05;
+        width = 0;
+        height = 0;
+        screenLeft = 0;
+        screenRight = 0;
+        screenTop = 0;
+        screenBottom = 0;
+
+        function MandelbrodtPool() {
+            var canvas = document.getElementById('canvas_Mandelbrodt');
+            var canvasHeight = parseInt(canvas.getAttribute("height"));
+            var canvasWidth = parseInt(canvas.getAttribute("width"));
+            var context = canvas.getContext('2d');
+            var fracType = document.getElementById('fractalType').value;
+            var iterations = document.getElementById('iterCount').value;
+            var imageData = context.createImageData(canvasWidth, canvasHeight);
+
+            for (var i = 0; i < canvasWidth; ++i) {
+                for (var j = 0; j < canvasHeight; ++j) {
+                    setPixel(imageData, canvasWidth, canvasHeight, i, j, fracType, iterations);
+                }
+            }
+            updateCanvas(context, imageData);
+
+        }
+
+        function setPixel(imageData, canvasWidth, canvasHeight, i, j, fracType, iterations) {
+
+            var cX = i * (screenRight - screenLeft) / (canvasWidth - 1) + screenLeft;
+            var cY = j * (screenBottom - screenTop) / (canvasHeight - 1) + screenTop;
+            var rootType = 0;
+            var zX = 0;
+            var zY = 0;
+            var k;
+            for (k = 0; k < iterations; ++k) {
+                if (outOfRound(zX, zY)) {
+                    rootType = 1;
+                    break;
+                }
+                tempX = zX;
+                tempY = zY;
+
+                zX = (tempX * tempX) - (tempY * tempY) + cX;
+                zY = 2 * (tempX * tempY) + cY;
+            }
+            var pixelColor = selectPixelColor(rootType, fracType, k, iterations);
+            setPixelColor(imageData, canvasWidth, i, j, pixelColor);
+        }
+
+        function outOfRound(x, y) {
+            return (x * x + y * y > 4)
+        }
+
+        function selectPixelColor(rootType, colorizingType, stoppingIteraion, iterations) {
+            var red = 0;
+            var green = 0;
+            var blue = 0;
+
+            if (colorizingType == "classic") {
+                if (rootType == 1) {
+                    red = 255;
+                    green = 255;
+                    blue = 255;
+                }
+            }
+            else if (colorizingType == "levels") {
+                red = iterations > 1 ? 255 * Math.log(1 + stoppingIteraion) / Math.log(iterations) : 0;
+                green = iterations > 1 ? 255 * Math.log(1 + stoppingIteraion) / Math.log(iterations) : 0;
+                blue = iterations > 1 ? 255 * Math.log(1 + stoppingIteraion) / Math.log(iterations) : 0;
+            }
+
+            else if (colorizingType == "zebra") {
+                if (stoppingIteraion % 2) {
+                    red = 255;
+                    green = 255;
+                    blue = 255;
+                }
+            }
+            return {
+                red: red,
+                green: green,
+                blue: blue
+            }
+        }
+
+        function setPixelColor(imageData, canvasWidth, i, j, colors) {
+            var index = (i + j * canvasWidth) * 4;
+            imageData.data[index + 0] = colors.red;
+            imageData.data[index + 1] = colors.green;
+            imageData.data[index + 2] = colors.blue;
+            imageData.data[index + 3] = 255; //opacity
+        }
+
+        function run() {
+            var canvas = document.getElementById('canvas_Mandelbrodt');
+            canvas.addEventListener("mousedown", canvasOnClick.bind(this), false);
+            width = parseInt(canvas.getAttribute("width")) / 80;
+            height = parseInt(canvas.getAttribute("height")) / 80;
+
+            screenLeft = -width / 2;
+            screenRight = width / 2 - 1;
+            screenBottom = -height / 2;
+            screenTop = height / 2 - 1;
+            MandelbrodtPool();
+        }
+
+        function canvasOnClick(event) {
+            var canvas = document.getElementById("canvas_Mandelbrodt");
+            var canvasWidth = parseInt(canvas.getAttribute("width"));
+            var canvasHeigth = parseInt(canvas.getAttribute("height"));
+            var startPosition = getMouseClickPosition(event, canvas);
+
+            var x = startPosition.X * (screenRight - screenLeft) / (canvasWidth - 1) + screenLeft;
+            var y = startPosition.Y * (screenBottom - screenTop) / (canvasHeigth - 1) + screenTop;
+
+            width = width / scale;
+            height = height / scale;
+
+            screenLeft = x - width / 2;
+            screenRight = x + width / 2;
+            screenBottom = (y - height / 2);
+            screenTop = (y + height / 2);
+
+            MandelbrodtPool();
+        }
+
+        function updateCanvas(context, canvasData) {
+            context.putImageData(canvasData, 0, 0);
+        }
+
+        getMouseClickPosition = function (mouseEvent, canvas) {
+            var x, y;
+            if (mouseEvent.pageX != undefined && mouseEvent.pageY != undefined) {
+                x = mouseEvent.pageX;
+                y = mouseEvent.pageY;
+            } else {
+                x = mouseEvent.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                y = mouseEvent.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+            }
+            return {X: x - canvas.offsetLeft, Y: y - canvas.offsetTop};
+        }
+    </script>
+</head>
+
+<body onload="run()">
+<canvas height='500' width='500' id='canvas_Mandelbrodt' style="border:1px solid #000000"></canvas>
+<br>
+Число итераций<br>
+<input type="number" id="iterCount" value="50" onchange="run()"><br>
+<select name="selection" id="fractalType" onchange="run()">
+    <option value="classic">Классика</option>
+    <option value="levels">Уровни на логарифмах</option>
+    <option value="zebra">Зебра</option>
+</select><br>
+</body>
+</html>

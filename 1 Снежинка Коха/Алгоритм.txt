@@ -1,0 +1,23 @@
+Вводная - есть исходные координаты и число итераций. Логично брать 2 координаты что для линии, что для треугольника.
+Создаём холст, на нём ставим стартовые точки - 3 штуки.Расстояние между первыми двумя вводим, координаты третьей считаем по формулке. Логично вынести базовые углы\синусы в глобальные переменные.
+Для каждой пары координат применяем функцию DrawSegment(x1,y1,x2,y2,iter, cur_iter)
+Если число итераций совпадает с текущим, то просто проводим линию из (x1,y1) в (x2,y2) и заканчиваем.
+Если нет - используем порт куска кода ниже для координат.
+
+var distance_x = (b_x-a_x)/3; // tri-sect the line
+        var distance_y = (b_y-a_y)/3; // tri-sect the line
+        var pa_x = a_x+distance_x;
+        var pa_y = a_y+distance_y;
+        var pb_x = b_x-distance_x;
+        var pb_y = b_y-distance_y;
+        // the tip of the new triangle points away thanks to Pythagoras 
+        var ptip_x = pa_x + (distance_x*cos60 + distance_y*sin60);
+        var ptip_y = pa_y + (distance_y*cos60 - distance_x*sin60);
+		
+		draw_segment(a_x,a_y, pa_x,pa_y, degreeIndex+1);
+        draw_segment(pa_x,pa_y, ptip_x,ptip_y, degreeIndex+1);
+        draw_segment(ptip_x,ptip_y, pb_x,pb_y, degreeIndex+1);
+        draw_segment(pb_x,pb_y, b_x,b_y, degreeIndex+1);
+		
+
+		UI - прикрутить вводилку числа итераций и начальной длины\кооординат. Координатки можно сделать фиксированными, а можно задать рандомно.

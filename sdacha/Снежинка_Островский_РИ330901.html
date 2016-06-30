@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="Cache-Control" content="no-cache"/>
+    <title>Snowflake</title>
+
+    <script>
+        cos60 = Math.cos(Math.PI / 3);
+        sin60 = Math.sin(Math.PI / 3);
+        function snowflake(x1, y1, x2, y2) {
+            var iter = document.getElementById("iteration").value;
+            var ptip_x = x1 + ((x2 - x1) * cos60 + (y2 - y1) * sin60);
+            var ptip_y = y1 + ((y2 - y1) * cos60 - (x2 - x1) * sin60);
+            var canvas = document.getElementById("canvas_snow");
+            var context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            draw_line(x2, y2, x1, y1, iter, 1);
+            draw_line(x1, y1, ptip_x, ptip_y, iter, 1);
+            draw_line(ptip_x, ptip_y, x2, y2, iter, 1);
+        }
+        function draw_line(x1, y1, x2, y2, iter, cur_iter) {
+            var canvas = document.getElementById("canvas_snow");
+            var canvasHeight = parseInt(canvas.getAttribute("height"));
+            var canvasWidth = parseInt(canvas.getAttribute("width"));
+            var context = canvas.getContext('2d');
+
+            context.lineWidth = "2";
+            context.strokeStyle = "red";
+            context.beginPath();
+            if (iter == cur_iter) {
+                context.moveTo(x1, y1);
+                context.lineTo(x2, y2);
+                context.stroke();
+            }
+            else {
+                var dist_x = (x2 - x1) / 3
+                var dist_y = (y2 - y1) / 3
+                var pa_x = x1 + dist_x;
+                var pa_y = y1 + dist_y;
+                var pb_x = x2 - dist_x;
+                var pb_y = y2 - dist_y;// the tip of the new triangle points away thanks to Pythagoras
+                var ptip_x = pa_x + (dist_x * cos60 + dist_y * sin60);
+                var ptip_y = pa_y + (dist_y * cos60 - dist_x * sin60);//draw line segments
+                draw_line(x1, y1, pa_x, pa_y, iter, cur_iter + 1);
+                draw_line(pa_x, pa_y, ptip_x, ptip_y, iter, cur_iter + 1);
+                draw_line(ptip_x, ptip_y, pb_x, pb_y, iter, cur_iter + 1);
+                draw_line(pb_x, pb_y, x2, y2, iter, cur_iter + 1);
+            }
+        }
+        function sliderUpdate(value) {
+            document.querySelector('#iterValue').value = value;
+        }
+    </script>
+</head>
+
+<body onload="snowflake(100, 300, 400, 300)">
+<canvas height='500' width='1200' id='canvas_snow'></canvas>
+<br>
+Число итераций
+<input type="range" min="1" max="10" step="1" id="iteration" oninput="snowflake(100, 300, 400, 300)" value="4"
+       list=iterSettings onchange="sliderUpdate(value)">
+<datalist id=iterSettings>
+    <option>1</option>
+    <option>2</option>
+    <option>3</option>
+    <option>4</option>
+    <option>5</option>
+    <option>6</option>
+    <option>7</option>
+    <option>8</option>
+    <option>9</option>
+    <option>10</option>
+</datalist>
+<output for=iteration id=iterValue>4</output>
+</body>
+</html>

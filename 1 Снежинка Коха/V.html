@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta http-equiv="Cache-Control" content="no-cache"/>
+		<style>
+			canvas	{ border: 3px double black;}
+		</style>
+	</head>
+		<script>
+		
+			var cos60 = Math.cos(Math.PI/3);
+			var sin60 = Math.sin(Math.PI/3);
+			
+			function drawSnowFlake(){
+				var canvas = document.getElementById("snowflake");
+				var canvasHeight = parseInt(canvas.getAttribute("height"));
+				var canvasWidth = parseInt(canvas.getAttribute("width"));
+				
+				var context = canvas.getContext('2d');
+				var iteration = document.getElementById("iteration").value;
+				
+				var xa = 50;
+				var ya = 175;
+				var xb = 650;
+				var yb = 175;
+				
+				var xc = xa + (xb - xa) * cos60 - sin60 * (yb - ya);
+				var yc = ya + (xb - xa) * sin60 + cos60 * (yb - ya);
+					
+				context.clearRect(0, 0, canvas.width, canvas.height);
+				
+				drawKochLine(xb, yb, xa, ya,  iteration, "purple", context);
+				drawKochLine(xa, ya, xc, yc, iteration, "purple", context);
+				drawKochLine(xc, yc, xb, yb, iteration, "purple", context);
+			}
+		
+			function drawKochLine(xa, ya, xe, ye, iter, color, context){
+				if(iter == 0){
+					drawLine(xa, ya, xe, ye, "0.6", color, context);
+				}
+				else{
+					var xb = xa + (xe - xa) * 1/3;
+					var yb = ya + (ye - ya) * 1/3;
+					
+					var xd = xa + (xe - xa) * 2/3;
+					var yd = ya + (ye - ya) * 2/3;
+										
+					var xc = xb + (xd - xb) * cos60 - sin60 * (yd - yb);
+					var yc = yb + (xd - xb) * sin60 + cos60 * (yd - yb);
+					
+					drawKochLine(xa, ya, xb, yb, iter - 1, color, context);
+					drawKochLine(xb, yb, xc, yc, iter - 1, color, context);
+					drawKochLine(xc, yc, xd, yd, iter - 1, color, context);
+					drawKochLine(xd, yd, xe, ye, iter - 1, color, context);
+				}
+			}
+		
+			function drawLine(x1, y1, x2, y2, lineWidth, lineColor, context){
+				context.lineWidth = lineWidth;
+				context.beginPath(); 
+				context.moveTo(x1, y1);
+				context.lineTo(x2, y2);
+				context.strokeStyle = lineColor;
+				context.stroke();
+			}
+			
+			function sliderUpdate(value){
+				document.querySelector('#iterValue').value = value;
+			}
+		</script>
+
+	<body onload = "drawSnowFlake()">
+		<canvas height='700' width='700' id='snowflake'></canvas>
+		 <p>
+			<label for=iteration>Количество итераций</label>
+			<input type="range" min="0" max="8" step = "1" id="iteration" oninput="drawSnowFlake()" value="4" list = iterSettings onchange = "sliderUpdate(value)">
+			<datalist id=iterSettings>
+				<option>0</option>
+				<option>1</option>
+				<option>2</option>
+				<option>3</option>
+				<option>4</option>
+				<option>5</option>
+				<option>6</option>
+				<option>7</option>
+				<option>8</option>
+			</datalist>
+			<output for=iteration id=iterValue>4</output>
+		 </p>
+	</body>
+</html>

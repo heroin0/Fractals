@@ -1,0 +1,187 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="Cache-Control" content="no-cache"/>
+    <title>Newton</title>
+
+
+    <script>
+
+        scale = 2;
+        rootX = [1, Math.cos(2 * Math.PI / 3), Math.cos(-2 * Math.PI / 3)];
+        rootY = [0, Math.sin(2 * Math.PI / 3), Math.sin(-2 * Math.PI / 3)];
+        width = 0;
+        height = 0;
+        screenLeft = 0;
+        screenRight = 0;
+        screenTop = 0;
+        screenBottom = 0;
+
+        function NewtonPool() {
+            var canvas = document.getElementById('canvas_Newton');
+            var canvasHeight = parseInt(canvas.getAttribute("height"));
+            var canvasWidth = parseInt(canvas.getAttribute("width"));
+            var context = canvas.getContext('2d');
+            var fracType = document.getElementById('fractalType').value;
+            var iterations = document.getElementById('iterCount').value;
+            var epsilon = 0.0000001;
+            var imageData = context.createImageData(canvasWidth, canvasHeight);
+
+            for (var i = 0; i < canvasWidth; ++i) {
+                for (var j = 0; j < canvasHeight; ++j) {
+                    setPixel(imageData, canvasWidth, canvasHeight, i, j, fracType, epsilon, iterations);
+                }
+            }
+            updateCanvas(context, imageData);
+        }
+
+        function setPixel(imageData, canvasWidth, canvasHeight, i, j, fracType, epsilon, iterations) {
+            var x = i * (screenRight - screenLeft) / (canvasWidth - 1) + screenLeft;
+            var y = j * (screenBottom - screenTop) / (canvasHeight - 1) + screenTop;
+            var rootPoolNumber = 0;
+            var k;
+
+            for (k = 0; k < iterations; ++k) {
+                rootPoolNumber = rootBelongsToPool(x, y, epsilon);
+                if (rootPoolNumber > 0) break;
+                var tempX = x;
+                var tempY = y;
+                x = transformPointX(tempX, tempY);
+                y = transformPointY(tempX, tempY);
+            }
+            var pixelColor = selectPixelColor(rootPoolNumber, fracType, k, iterations);
+            setPixelColor(imageData, canvasWidth, i, j, pixelColor);
+        }
+
+        function rootBelongsToPool(x, y, epsilon) {
+            for (var i = 0; i <= 2; ++i) {
+                if ((x - rootX[i]) * (x - rootX[i]) + (y - rootY[i]) * (y - rootY[i]) <= epsilon)
+                    return (i + 1);
+            }
+        }
+
+        function selectPixelColor(rootNumber, colorizingType, stoppingPoint, iterations) {
+            var red = 0;
+            var green = 0;
+            var blue = 0;
+
+            if (colorizingType == "classic") {
+                switch (rootNumber) {
+                    case 1:
+                        red = 255;
+                        break;
+                    case 2:
+                        green = 255;
+                        break;
+                    case 3:
+                        blue = 255;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            else if (colorizingType == "levels") {
+                red = iterations > 1 ? 255 * Math.log(1 + stoppingPoint) / Math.log(iterations) : 0;
+                green = iterations > 1 ? 255 * Math.log(1 + stoppingPoint) / Math.log(iterations) : 0;
+                blue = iterations > 1 ? 255 * Math.log(1 + stoppingPoint) / Math.log(iterations) : 0;
+            }
+
+            else if (colorizingType == "zebra") {
+                if (stoppingPoint % 2) {
+                    red = 255;
+                    green = 255;
+                    blue = 255;
+                }
+            }
+            return {
+                red: red,
+                green: green,
+                blue: blue
+            }
+        }
+
+        function setPixelColor(imageData, canvasWidth, i, j, colors) {
+            var index = (i + j * canvasWidth) * 4;
+            imageData.data[index + 0] = colors.red;
+            imageData.data[index + 1] = colors.green;
+            imageData.data[index + 2] = colors.blue;
+            imageData.data[index + 3] = 255; //opacity
+        }
+
+        function run() {
+            var canvas = document.getElementById('canvas_Newton');
+            canvas.addEventListener("mousedown", canvasOnClick.bind(this), false);
+            width = parseInt(canvas.getAttribute("width"));
+            height = parseInt(canvas.getAttribute("height"));
+
+            screenLeft = -width / 2;
+            screenRight = width / 2 - 1;
+            screenBottom = -height / 2;
+            screenTop = height / 2 - 1;
+            NewtonPool();
+        }
+
+
+        function canvasOnClick(event) {
+            var canvas = document.getElementById("canvas_Newton");
+
+            var canvasWidth = parseInt(canvas.getAttribute("width"));
+            var canvasHeight = parseInt(canvas.getAttribute("height"));
+            var startPosition = getMouseClickPosition(event, canvas);
+
+            var x = startPosition.X * (screenRight - screenLeft) / (canvasWidth - 1) + screenLeft;
+            var y = startPosition.Y * (screenBottom - screenTop) / (canvasHeight - 1) + screenTop;
+
+            width = width / scale;
+            height = height / scale;
+
+            screenLeft = x - width / 2;
+            screenRight = x + width / 2;
+            screenBottom = y - height / 2;
+            screenTop = y + height / 2;
+
+            NewtonPool();
+        }
+
+
+        function transformPointX(x, y) {
+            return (2 * x / 3 + (x * x - y * y) / (3 * (x * x + y * y) * (x * x + y * y)));
+        }
+
+        function transformPointY(x, y) {
+            return (2 / 3 * y * (1 - x / ((x * x + y * y) * (x * x + y * y))));
+        }
+
+        function updateCanvas(context, canvasData) {
+            context.putImageData(canvasData, 0, 0);
+        }
+
+        getMouseClickPosition = function (mouseEvent, canvas) {
+            var x, y;
+            if (mouseEvent.pageX != undefined && mouseEvent.pageY != undefined) {
+                x = mouseEvent.pageX;
+                y = mouseEvent.pageY;
+            } else {
+                x = mouseEvent.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                y = mouseEvent.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+            }
+
+            return {X: x - canvas.offsetLeft, Y: y - canvas.offsetTop};
+        }
+    </script>
+</head>
+
+<body onload="run()">
+<canvas height='500' width='500' id='canvas_Newton' style="border:1px solid #000000"></canvas>
+<br>
+Число итераций<br>
+<input type="number" id="iterCount" value="50" onchange="run()"><br>
+<select name="selection" id="fractalType" onchange="run()">
+    <option type="text" value="classic">Классика</option>
+    <option type="text" value="levels">Уровни на логарифмах</option>
+    <option type="text" value="zebra">Зебра</option>
+</select><br>
+</body>
+</html>

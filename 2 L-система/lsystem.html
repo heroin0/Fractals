@@ -1,0 +1,137 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="Cache-Control" content="no-cache"/>
+    <title> L - system </title>
+    <script>
+        // var axiom="F";
+        // var newF="-F+F+[+F-F-]-[-F+F+F]";
+        //  var q=pi/8;
+        //s - длина шага, q -  величина поворота
+        //s можно менять полувручную, функцией скейлинг. типа, s=k/iterations
+
+
+        function LSys() {
+            var canvas = document.getElementById("canvas_system");
+            var canvasHeight = parseInt(canvas.getAttribute("height"));
+            var canvasWidth = parseInt(canvas.getAttribute("width"));
+            var context = canvas.getContext('2d');
+            context.lineWidth = "0.2";
+            context.strokeStyle = "red";
+
+            var axiom = document.getElementById('axiom').value;
+            var newF = document.getElementById('newF').value;
+            var iterations = document.getElementById('iteration').value;
+            var resultString = iterativeTransform(axiom, newF, iterations, 1);
+
+            var s = parseFloat(document.getElementById('newS').value)
+            s = scale(s, iterations);
+            var angle = parseFloat(document.getElementById('newQ').value) * Math.PI / 180;
+            var startAngle = parseFloat(document.getElementById('startAngle').value) * Math.PI / 180;
+            context.clearRect(0, 0, canvasWidth, canvasHeight);
+            context.beginPath();
+            drawLine(context, s, angle, resultString, 100, 300, startAngle);
+            context.stroke();
+        }
+
+        function scale(length, iterations) {
+            return (length / iterations);
+        }
+
+        function iterativeTransform(axiom, newF, n, current) {//n - число итераций
+            var newAxiom = "";
+            for (var i = 0; i < axiom.length; ++i) {
+                if (axiom[i] == "F")
+                    newAxiom += newF;
+                else
+                    newAxiom += axiom[i];
+            }
+            if (n > current) {
+                current++;
+                newAxiom = iterativeTransform(newAxiom, newF, n, current);
+            }
+            return newAxiom;
+        }
+
+        function drawLine(context, segmentLength, rotationAngle, resultString, startX, startY, startAngle) {
+            var curX = startX;
+            var curY = startY;
+            var curAngle = startAngle;
+            context.moveTo(curX, curY);
+            var positionStack = [];
+            for (i = 0; i < resultString.length; ++i) {
+                var curSymbol = resultString[i];
+
+                if (curSymbol == "F") {
+                    curX += segmentLength * Math.cos(curAngle);
+                    curY += segmentLength * Math.sin(curAngle);
+                    context.lineTo(curX, curY);
+                }
+                else if (curSymbol == "f") {
+                    curX += segmentLength * Math.cos(curAngle);
+                    curY += segmentLength * Math.sin(curAngle);
+                    context.moveTo(curX, curY);
+                }
+                else if (curSymbol == "+") {
+                    curAngle += rotationAngle;
+                }
+                else if (curSymbol == "-") {
+                    curAngle -= rotationAngle;
+                }
+                else if (curSymbol == "[") {
+                    positionStack.push({x: curX, y: curY, angle: curAngle});
+                }
+                else if (curSymbol == "]") {
+                    var position = positionStack.pop();
+                    curX = position.x;
+                    curY = position.y;
+                    curAngle = position.angle;
+                    context.moveTo(curX, curY);
+                }
+
+            }
+        }
+
+        function run() {
+            LSys();
+        }
+
+    </script>
+</head>
+
+<body>
+<canvas height='400' width='400' id='canvas_system' style="border:1px solid #000000;"></canvas>
+<br>
+
+<form id="prompt-form">
+    <div id="prompt-message">Введите кучу данных для системы
+    </div>
+    Аксиома
+    <br>
+    <input id="axiom" type="text" value="F">
+    <br>
+    Правило преобразования
+    <br>
+    <input id="newF" type="text" value="-F+F+[+F-F-]-[-F+F+F]">
+    <br>
+    Угол поворота
+    <br>
+    <input id="newQ" type="text" value="22.5">
+    <br>
+    Начальный угол поворота
+    <br>
+    <input id="startAngle" type="text" value="0">
+    <br>
+    Длина отрезка
+    <br>
+    <input id="newS" type="text" value="20">
+    <br>
+    Число итераций
+    <br>
+    <input id="iteration" type="text" value="2">
+    <br>
+    <input type="button" onclick="run()" value="Ок">
+</form>
+</body>
+</html>
